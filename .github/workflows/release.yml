@@ -1,0 +1,104 @@
+name: Release
+
+# Tag 必须与 package.json 的 version 一致，例如 v0.1.0。
+# 发布前需要能读取 Work-Agent/WorkStudio 的 packages/sdk：
+# - Public repo：默认 GITHUB_TOKEN 通常可用；
+# - Private repo：在 HTMLEditor 仓库添加 secret WORKSTUDIO_TOKEN
+#   （PAT，Contents: Read 即可）。
+# 可选仓库变量 WORKSTUDIO_REF 用于固定 SDK 的 tag / commit。
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+          fetch-depth: 0
+
+      - name: Checkout WorkStudio SDK source
+        uses: actions/checkout@v4
+        with:
+          repository: Work-Agent/WorkStudio
+          path: WorkStudio
+          ref: ${{ vars.WORKSTUDIO_REF }}
+          token: ${{ secrets.WORKSTUDIO_TOKEN || github.token }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: plugin/pnpm-lock.yaml
+
+      - name: Validate release tag
+        working-directory: plugin
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match plugin version ${version}" >&2
+            exit 1
+          fi
+
+      - name: Build WorkStudio SDK
+        working-directory: WorkStudio/packages/sdk
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund --no-package-lock
+          npm run build
+          test -f dist/cli.js
+
+      - name: Install dependencies
+        working-directory: plugin
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: plugin
+        run: pnpm typecheck
+
+      - name: Build
+        working-directory: plugin
+        run: pnpm build
+
+      - name: Pack plugin zip
+        working-directory: plugin
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          name="html-editor-v${version}"
+          rm -rf release
+          mkdir -p "release/${name}"
+          cp package.json commands.json api.json api.d.ts README.md LICENSE \
+            "release/${name}/"
+          cp -R dist skills docs "release/${name}/"
+          (cd "release/${name}" && zip -qr "../${name}.zip" .)
+          (cd release && sha256sum "${name}.zip" > "${name}.zip.sha256")
+          ls -lh release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            plugin/release/*.zip
+            plugin/release/*.sha256

@@ -160,3 +160,6 @@ vite.config.ts.timestamp-*
 commands.json
 api.json
 api.d.ts
+
+# Local release artifacts
+release/

@@ -60,6 +60,35 @@ api.d.ts
 - 引擎：`dist/engine.js`
 - 技能：`skills/html-editor/SKILL.md`
 
+## Release
+
+Tag 必须与 `package.json` 的 `version` 一致：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+`.github/workflows/release.yml` 在 tag 推送后：
+
+1. checkout 插件和 WorkStudio 的 `packages/sdk`，先构建 SDK；
+2. `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm build`；
+3. 打包并创建 GitHub Release：
+   - `html-editor-v0.1.0.zip`（可直接安装）
+   - `html-editor-v0.1.0.zip.sha256`
+
+zip 根目录包含 `package.json`、`dist/`、`skills/`、`commands.json`、`api.json`、
+`api.d.ts`、`docs/`、`README.md`、`LICENSE`。
+
+WorkStudio SDK 从 `Work-Agent/WorkStudio` checkout：
+
+- 如果该仓库是私有的，在 HTMLEditor 仓库添加 secret `WORKSTUDIO_TOKEN`
+  （PAT，Contents: Read 即可）；
+- 可选仓库变量 `WORKSTUDIO_REF` 固定 SDK 的 tag / commit；
+- 如果仓库公开，默认 `GITHUB_TOKEN` 通常可用。
+
+安装 release zip：WorkStudio 设置 → 插件 → 从 zip 安装（或宿主对应的插件安装入口）。
+
 ## 命令
 
 | 命令 | 入参 | 说明 |
