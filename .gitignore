@@ -155,3 +155,8 @@ vite.config.ts.timestamp-*
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
+
+# Generated plugin descriptors
+commands.json
+api.json
+api.d.ts

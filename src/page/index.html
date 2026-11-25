@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>HTML</title>
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="toolbar">
+        <div class="file">
+          <span class="badge" aria-hidden="true">&lt;/&gt;</span>
+          <span id="title" class="title">HTML</span>
+          <span id="dirty" class="dirty" aria-live="polite"></span>
+        </div>
+        <div class="tools">
+          <button id="undo" type="button" class="tool" title="撤销" aria-label="撤销">↶</button>
+          <button id="redo" type="button" class="tool" title="重做" aria-label="重做">↷</button>
+          <span class="divider" aria-hidden="true"></span>
+          <button id="search" type="button" class="tool" title="查找">查找</button>
+          <button id="wrap" type="button" class="tool" title="自动换行" aria-pressed="true">换行</button>
+          <button id="lines" type="button" class="tool" title="显示行号" aria-pressed="true">行号</button>
+          <span class="divider" aria-hidden="true"></span>
+          <button id="preview" type="button" class="ghost" title="在本地预览服务中打开当前内容（页面脚本会运行）">预览</button>
+          <button id="save" type="button" class="primary">保存</button>
+        </div>
+      </header>
+
+      <div id="conflict" class="conflict" role="alert" hidden>
+        <span>文件已在外部更新。</span>
+        <div class="conflict-actions">
+          <button id="conflict-reload" type="button">重新加载</button>
+          <button id="conflict-keep" type="button" class="ghost">保留我的修改</button>
+        </div>
+      </div>
+
+      <main class="main">
+        <div
+          id="editor"
+          class="editor"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="HTML 源码"
+        ></div>
+      </main>
+
+      <footer class="statusbar">
+        <span id="status" class="status" aria-live="polite">就绪</span>
+        <span class="grow"></span>
+        <span id="position" class="meta"></span>
+        <span id="count" class="meta"></span>
+        <span class="meta">UTF-8</span>
+        <span class="meta">HTML</span>
+      </footer>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

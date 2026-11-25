@@ -1,0 +1,388 @@
+:root {
+  color-scheme: light;
+  --he-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --he-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --he-font-size: 13px;
+  --he-bg: #ffffff;
+  --he-panel: #fbfbfc;
+  --he-fg: #23262b;
+  --he-muted: #7c828c;
+  --he-border: #e4e6ea;
+  --he-accent: #4f6bed;
+  --he-accent-soft: rgba(79, 107, 237, 0.12);
+  --he-selection: rgba(79, 107, 237, 0.2);
+  --he-active-line: rgba(20, 24, 32, 0.028);
+  --he-gutter-fg: #a0a6af;
+  --he-input-bg: #ffffff;
+  --he-button-bg: #f6f7f9;
+  --he-search-match: rgba(250, 204, 21, 0.38);
+  --he-search-selected: rgba(249, 115, 22, 0.28);
+  --he-danger: #dc2626;
+  --he-warning: #b45309;
+  --he-shadow: 0 10px 30px rgba(20, 24, 32, 0.14);
+
+  --he-tag: #2563eb;
+  --he-attr: #b45309;
+  --he-string: #0f766e;
+  --he-comment: #8b919c;
+  --he-number: #b45309;
+  --he-keyword: #c026d3;
+  --he-meta: #7c828c;
+  --he-punct: #9aa0a9;
+  --he-link: #2563eb;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --he-bg: #1b1d21;
+  --he-panel: #202226;
+  --he-fg: #e7e9ee;
+  --he-muted: #8b919c;
+  --he-border: #2d3036;
+  --he-accent: #7c9bff;
+  --he-accent-soft: rgba(124, 155, 255, 0.16);
+  --he-selection: rgba(124, 155, 255, 0.24);
+  --he-active-line: rgba(255, 255, 255, 0.035);
+  --he-gutter-fg: #6b7280;
+  --he-input-bg: #1b1d21;
+  --he-button-bg: #272a2f;
+  --he-search-match: rgba(250, 204, 21, 0.26);
+  --he-search-selected: rgba(249, 115, 22, 0.3);
+  --he-danger: #f87171;
+  --he-warning: #fbbf24;
+  --he-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+
+  --he-tag: #93c5fd;
+  --he-attr: #fbbf24;
+  --he-string: #5eead4;
+  --he-comment: #7f8794;
+  --he-number: #fbbf24;
+  --he-keyword: #f0abfc;
+  --he-meta: #8b919c;
+  --he-punct: #6b7280;
+  --he-link: #8ab4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--he-bg);
+  color: var(--he-fg);
+  font-family: var(--he-font);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--he-bg);
+}
+
+/* ─── Toolbar ───────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--he-border);
+  background: var(--he-panel);
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--he-accent-soft);
+  color: var(--he-accent);
+  font: 600 10px/1 var(--he-font-mono);
+  letter-spacing: 0.02em;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--he-fg);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+.dirty {
+  flex: 0 0 auto;
+  color: var(--he-warning);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.tool,
+.ghost,
+.primary {
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--he-fg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.72;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.tool:hover,
+.ghost:hover {
+  background: var(--he-button-bg);
+  color: var(--he-fg);
+  opacity: 1;
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--he-accent-soft);
+  color: var(--he-accent);
+  opacity: 1;
+}
+
+.tool[aria-pressed="false"] {
+  color: var(--he-muted);
+  opacity: 1;
+}
+
+.tool:disabled,
+.ghost:disabled,
+.primary:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.tool:disabled:hover,
+.ghost:disabled:hover,
+.primary:disabled:hover {
+  background: transparent;
+  color: var(--he-muted);
+}
+
+.ghost {
+  border-color: var(--he-border);
+  color: var(--he-fg);
+}
+
+.primary {
+  min-width: 58px;
+  border-color: var(--he-accent);
+  background: var(--he-accent);
+  color: #fff;
+}
+
+.primary:hover {
+  filter: brightness(1.05);
+}
+
+.primary.is-dirty {
+  box-shadow: 0 0 0 3px var(--he-accent-soft);
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 3px;
+  background: var(--he-border);
+}
+
+/* ─── Conflict banner ───────────────────────────────────────── */
+
+.conflict {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--he-border);
+  background: var(--he-panel);
+  background: color-mix(in srgb, var(--he-warning) 9%, var(--he-bg));
+  color: var(--he-fg);
+  font-size: 12px;
+}
+
+.conflict[hidden] {
+  display: none;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ─── Editor ────────────────────────────────────────────────── */
+
+.main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--he-bg);
+}
+
+.editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editor .cm-editor {
+  height: 100%;
+}
+
+/* CM6 内部滚动条，跟随主题，避免默认亮色轨道在深色下突兀。 */
+.editor .cm-scroller::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.editor .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor .cm-scroller::-webkit-scrollbar-thumb {
+  border: 2px solid var(--he-bg);
+  border-radius: 8px;
+  background: var(--he-muted);
+  background: color-mix(in srgb, var(--he-muted) 42%, transparent);
+}
+
+.editor .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--he-muted) 62%, transparent);
+}
+
+/* ─── Status bar ────────────────────────────────────────────── */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 12px;
+  border-top: 1px solid var(--he-border);
+  background: var(--he-panel);
+  color: var(--he-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status.is-error {
+  color: var(--he-danger);
+}
+
+.status.is-warning {
+  color: var(--he-warning);
+}
+
+.grow {
+  flex: 1 1 auto;
+}
+
+.meta {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta + .meta {
+  padding-left: 12px;
+  border-left: 1px solid var(--he-border);
+}
+
+/* ─── Narrow windows ────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  #position,
+  #count {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .toolbar {
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .tools {
+    gap: 2px;
+  }
+
+  .tool,
+  .ghost,
+  .primary {
+    padding: 0 7px;
+  }
+
+  #search,
+  #wrap,
+  #lines {
+    display: none;
+  }
+
+  .statusbar .meta:last-child {
+    display: none;
+  }
+}

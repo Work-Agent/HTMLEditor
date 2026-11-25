@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>HTML 预览</title>
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="toolbar">
+        <div class="file">
+          <span class="badge" aria-hidden="true">预览</span>
+          <span id="title" class="title">HTML</span>
+          <span id="connection" class="connection"></span>
+        </div>
+        <div class="tools">
+          <button
+            id="pick"
+            type="button"
+            class="tool"
+            title="选择元素并定位到源码"
+            aria-pressed="false"
+          >
+            选择元素
+          </button>
+          <span class="divider" aria-hidden="true"></span>
+          <button id="width-auto" type="button" class="tool width" data-width="auto" aria-pressed="true" title="自适应宽度">自动</button>
+          <button id="width-375" type="button" class="tool width" data-width="375" aria-pressed="false" title="手机宽度">375</button>
+          <button id="width-768" type="button" class="tool width" data-width="768" aria-pressed="false" title="平板宽度">768</button>
+          <button id="width-1280" type="button" class="tool width" data-width="1280" aria-pressed="false" title="桌面宽度">1280</button>
+          <span class="divider" aria-hidden="true"></span>
+          <button id="console" type="button" class="tool console-button" title="预览控制台" aria-pressed="false">
+            控制台
+            <span id="console-count" class="console-count" hidden></span>
+          </button>
+          <button id="reload" type="button" class="ghost" title="从编辑器刷新预览">刷新</button>
+        </div>
+      </header>
+
+      <main id="stage" class="stage">
+        <div id="frame-wrap" class="frame-wrap" data-width="auto">
+          <iframe
+            id="preview"
+            title="HTML 预览"
+            referrerpolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+          ></iframe>
+        </div>
+      </main>
+
+      <section id="console-panel" class="console-panel" hidden aria-label="预览控制台">
+        <header class="console-head">
+          <span class="console-title">控制台</span>
+          <span id="console-summary" class="console-summary">暂无输出</span>
+          <span class="grow"></span>
+          <button id="console-clear" type="button" class="console-action">清空</button>
+          <button id="console-close" type="button" class="console-action" aria-label="关闭控制台">×</button>
+        </header>
+        <div id="console-list" class="console-list" role="log"></div>
+      </section>
+
+      <footer class="statusbar">
+        <span id="status" class="status" aria-live="polite">等待编辑器…</span>
+        <span class="grow"></span>
+        <span id="hint" class="meta">选择元素：点击预览中的元素定位源码</span>
+      </footer>
+    </div>
+    <script type="module" src="./preview-main.ts"></script>
+  </body>
+</html>
