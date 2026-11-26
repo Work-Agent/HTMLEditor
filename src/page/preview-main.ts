@@ -1,4 +1,4 @@
-import '@workstudio/sdk/global';
+import '@work-studio/sdk/global';
 import './preview.css';
 
 import {

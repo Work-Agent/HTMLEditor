@@ -32,9 +32,9 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.5
         version: 1.2.5
-      '@workstudio/sdk':
-        specifier: file:../WorkStudio/packages/sdk
-        version: file:../WorkStudio/packages/sdk
+      '@work-studio/sdk':
+        specifier: 0.1.0
+        version: 0.1.0
       parse5:
         specifier: ^8.1.1
         version: 8.1.1
@@ -42,6 +42,9 @@ importers:
       '@types/node':
         specifier: ^26.6.4
         version: 26.6.6
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -234,8 +237,8 @@ packages:
   '@types/node@26.6.6':
     resolution: {integrity: sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==}
 
-  '@workstudio/sdk@file:../WorkStudio/packages/sdk':
-    resolution: {directory: ../WorkStudio/packages/sdk, type: directory}
+  '@work-studio/sdk@0.1.0':
+    resolution: {integrity: sha512-YOziTMf/uCWYRWqsDuNZbtI4M9D1lvTAobdxTrQkAXYJWlV4aGtwErCriPsnCbcpnCXYVkB9PKUIbBEkjbdP4A==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -258,6 +261,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -629,7 +635,7 @@ snapshots:
     dependencies:
       undici-types: 8.9.0
 
-  '@workstudio/sdk@file:../WorkStudio/packages/sdk': {}
+  '@work-studio/sdk@0.1.0': {}
 
   crelt@1.0.7: {}
 
@@ -640,6 +646,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
+
+  fflate@0.8.3: {}
 
   fsevents@2.3.3:
     optional: true

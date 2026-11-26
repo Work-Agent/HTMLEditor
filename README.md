@@ -62,32 +62,47 @@ api.d.ts
 
 ## Release
 
-Tag 必须与 `package.json` 的 `version` 一致：
+打 tag 会触发 `.github/workflows/release.yml`：
 
 ```bash
 git tag v0.1.0
+git push origin main
 git push origin v0.1.0
 ```
 
-`.github/workflows/release.yml` 在 tag 推送后：
+也支持 `0.1`、`0.1.0`、`v0.1` 这类 tag；tag 必须与 `package.json` 的 version 对齐。
 
-1. checkout 插件和 WorkStudio 的 `packages/sdk`，先构建 SDK；
+Workflow 会：
+
+1. 从 npm 安装已发布的 `@work-studio/sdk`；
 2. `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm build`；
-3. 打包并创建 GitHub Release：
-   - `html-editor-v0.1.0.zip`（可直接安装）
-   - `html-editor-v0.1.0.zip.sha256`
+3. 生成最小清单的自包含 zip：
+   - `html-editor-<version>.zip`
+   - `html-editor-<version>.zip.sha256`
+4. 创建 GitHub Release；
+5. 更新 `Work-Agent/PluginRegistry` 的 `plugins/html-editor.json`，并自动提交 PR。
 
-zip 根目录包含 `package.json`、`dist/`、`skills/`、`commands.json`、`api.json`、
-`api.d.ts`、`docs/`、`README.md`、`LICENSE`。
+Release 需要配置 GitHub App：
 
-WorkStudio SDK 从 `Work-Agent/WorkStudio` checkout：
+- App 安装到 `Work-Agent/PluginRegistry`
+- App 权限：`Contents: write` + `Pull requests: write`
+- 在 HTMLEditor 的 Actions secrets/variables 中配置：
+  - `REGISTRY_APP_CLIENT_ID`（secret 或 variable）
+  - `REGISTRY_APP_PRIVATE_KEY`（secret）
 
-- 如果该仓库是私有的，在 HTMLEditor 仓库添加 secret `WORKSTUDIO_TOKEN`
-  （PAT，Contents: Read 即可）；
-- 可选仓库变量 `WORKSTUDIO_REF` 固定 SDK 的 tag / commit；
-- 如果仓库公开，默认 `GITHUB_TOKEN` 通常可用。
+HTMLEditor 是 public 时，可以使用 Organization secret（把本仓库加入访问范围），
+也可以使用 Repository secret。
 
-安装 release zip：WorkStudio 设置 → 插件 → 从 zip 安装（或宿主对应的插件安装入口）。
+本地打包：
+
+```bash
+pnpm build
+pnpm pack:plugin
+```
+
+PluginRegistry 的自动合并规则：新插件第一次进入市场需要人工 review；已有插件只改
+`version` / `source` / `sha256` 时，通过 `validate` 和 `verify-artifact` 后由 Registry
+机器人自动合并。
 
 ## 命令
 

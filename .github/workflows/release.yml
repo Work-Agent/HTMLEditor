@@ -1,75 +1,79 @@
-name: Release
-
-# Tag 必须与 package.json 的 version 一致，例如 v0.1.0。
-# 发布前需要能读取 Work-Agent/WorkStudio 的 packages/sdk：
-# - Public repo：默认 GITHUB_TOKEN 通常可用；
-# - Private repo：在 HTMLEditor 仓库添加 secret WORKSTUDIO_TOKEN
-#   （PAT，Contents: Read 即可）。
-# 可选仓库变量 WORKSTUDIO_REF 用于固定 SDK 的 tag / commit。
+name: Release plugin
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[0-9]*'
+      - '[0-9]*'
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
+    name: Build and publish plugin zip
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout plugin
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: plugin
           fetch-depth: 0
 
-      - name: Checkout WorkStudio SDK source
-        uses: actions/checkout@v4
+      - name: Check PluginRegistry App secrets
+        env:
+          APP_CLIENT_ID: ${{ secrets.REGISTRY_APP_CLIENT_ID || vars.REGISTRY_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.REGISTRY_APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APP_CLIENT_ID" ] || [ -z "$APP_PRIVATE_KEY" ]; then
+            echo "::error::Missing REGISTRY_APP_CLIENT_ID / REGISTRY_APP_PRIVATE_KEY."
+            exit 1
+          fi
+
+      - name: Create PluginRegistry app token
+        id: registry-app
+        uses: actions/create-github-app-token@v3
         with:
-          repository: Work-Agent/WorkStudio
-          path: WorkStudio
-          ref: ${{ vars.WORKSTUDIO_REF }}
-          token: ${{ secrets.WORKSTUDIO_TOKEN || github.token }}
-          persist-credentials: false
-          fetch-depth: 1
+          client-id: ${{ secrets.REGISTRY_APP_CLIENT_ID || vars.REGISTRY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.REGISTRY_APP_PRIVATE_KEY }}
+          owner: Work-Agent
+          repositories: PluginRegistry
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 12.4.1
+          version: 10.18.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: plugin/pnpm-lock.yaml
 
+      - name: Install plugin dependencies
+        working-directory: plugin
+        run: pnpm install --frozen-lockfile
+
       - name: Validate release tag
         working-directory: plugin
         run: |
           set -euo pipefail
-          version=$(node -p "require('./package.json').version")
-          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
-            echo "tag ${GITHUB_REF_NAME} does not match plugin version ${version}" >&2
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$VERSION" ] && [ "${TAG}.0" != "$VERSION" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $VERSION"
             exit 1
           fi
-
-      - name: Build WorkStudio SDK
-        working-directory: WorkStudio/packages/sdk
-        run: |
-          set -euo pipefail
-          npm install --no-audit --no-fund --no-package-lock
-          npm run build
-          test -f dist/cli.js
-
-      - name: Install dependencies
-        working-directory: plugin
-        run: pnpm install --frozen-lockfile
 
       - name: Typecheck
         working-directory: plugin
@@ -81,24 +85,85 @@ jobs:
 
       - name: Pack plugin zip
         working-directory: plugin
+        run: pnpm pack:plugin
+
+      - name: Verify zip
+        working-directory: plugin
         run: |
           set -euo pipefail
-          version=$(node -p "require('./package.json').version")
-          name="html-editor-v${version}"
-          rm -rf release
-          mkdir -p "release/${name}"
-          cp package.json commands.json api.json api.d.ts README.md LICENSE \
-            "release/${name}/"
-          cp -R dist skills docs "release/${name}/"
-          (cd "release/${name}" && zip -qr "../${name}.zip" .)
-          (cd release && sha256sum "${name}.zip" > "${name}.zip.sha256")
-          ls -lh release
+          ZIP="$(ls release/*.zip | head -n1)"
+          unzip -l "$ZIP"
+          unzip -l "$ZIP" | grep -q 'dist/engine.js'
+          unzip -l "$ZIP" | grep -q 'dist/page/index.html'
+          unzip -l "$ZIP" | grep -q 'dist/page/preview.html'
+          unzip -l "$ZIP" | grep -q 'dist/settings/index.html'
+          unzip -l "$ZIP" | grep -q 'skills/html-editor/SKILL.md'
+          unzip -p "$ZIP" package.json | node -e "
+            let s = '';
+            process.stdin.on('data', (d) => (s += d));
+            process.stdin.on('end', () => {
+              const pkg = JSON.parse(s);
+              if (pkg.workstudio?.id !== 'html-editor') process.exit(1);
+              if (pkg.dependencies || pkg.devDependencies) process.exit(2);
+            });
+          "
+
+      - name: Read release metadata
+        id: meta
+        working-directory: plugin
+        run: |
+          set -euo pipefail
+          ZIP="$(basename "$(ls release/*.zip | head -n1)")"
+          VERSION="$(node -p "require('./package.json').version")"
+          SHA="$(tr -d '[:space:]' < "release/${ZIP}.sha256")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             plugin/release/*.zip
             plugin/release/*.sha256
+
+      - name: Checkout plugin registry
+        uses: actions/checkout@v7
+        with:
+          repository: Work-Agent/PluginRegistry
+          path: PluginRegistry
+          token: ${{ steps.registry-app.outputs.token }}
+          fetch-depth: 0
+
+      - name: Write plugin registry entry
+        working-directory: plugin
+        env:
+          REGISTRY_DIR: ${{ github.workspace }}/PluginRegistry
+          SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.meta.outputs.zip }}
+          SHA256: ${{ steps.meta.outputs.sha }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: node scripts/write-registry-entry.mjs
+
+      - name: Validate plugin registry
+        working-directory: PluginRegistry
+        run: npm run validate
+
+      - name: Open PluginRegistry pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.registry-app.outputs.token }}
+          path: PluginRegistry
+          base: main
+          branch: release/html-editor-${{ steps.meta.outputs.version }}
+          delete-branch: true
+          commit-message: "chore: add html-editor ${{ steps.meta.outputs.version }}"
+          title: "chore: add html-editor ${{ steps.meta.outputs.version }}"
+          body: |
+            Automated release from [${{ github.repository }}](${{ github.server_url }}/${{ github.repository }}).
+
+            - Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+            - Zip: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.meta.outputs.zip }}
+            - SHA256: `${{ steps.meta.outputs.sha }}`
+          add-paths: |
+            plugins/html-editor.json

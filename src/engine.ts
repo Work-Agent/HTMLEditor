@@ -8,7 +8,7 @@
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { definePlugin } from "@workstudio/sdk";
+import { definePlugin } from "@work-studio/sdk";
 import { createPreviewServers } from "./server/preview";
 
 const previews = createPreviewServers();

@@ -1,4 +1,4 @@
-import '@workstudio/sdk/global';
+import '@work-studio/sdk/global';
 import './style.css';
 
 import { redo, undo } from '@codemirror/commands';
